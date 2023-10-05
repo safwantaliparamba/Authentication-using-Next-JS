@@ -3,10 +3,14 @@
 import { APIResponse } from '@/types/api'
 import axios from 'axios'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
 
 function SignIn() {
+    const router = useRouter()
+
+    const [isLoading, setLoading] = useState(false)
     const [inputs, setInputs] = useState({
         email: "",
         password: "",
@@ -23,16 +27,26 @@ function SignIn() {
     }
 
     const onSubmit = () => {
-        axios
-            .post("/api/v1/sign-in/", { ...inputs })
-            .then((res) => {
-                const { StatusCode, data }:APIResponse<null> = res.data
+        try{
+            setLoading(true)
 
-                console.log(res.data)
-            })
-            .then((err: any) => {
-                console.log(err)
-            })
+            axios
+                .post("/api/v1/sign-in/", { ...inputs })
+                .then((res) => {
+                    const { StatusCode, data }:APIResponse<null> = res.data
+                    
+                    if (StatusCode === 6000){
+                        router.push("/profile")
+                    }
+                })
+                .catch((err: any) => {
+                    console.log(err)
+                })
+        }catch (e: any){
+            console.log(e.message);
+        }finally{
+            setLoading(false)
+        }
     }
 
     return (
@@ -59,9 +73,9 @@ function SignIn() {
                 </div>
                 <button
                     className="px-3 py-1 bg-[#7f50ff] text-[#000] w-full rounded font-bold"
-                    onClick={onSubmit}
+                    onClick={!isLoading ? onSubmit : ()=>{}}
                 >
-                    Submit
+                    {isLoading ? "loading" : "Submit"}
                 </button>
                 <p className="text-center mt-6 text-[14px]">Dont have an account? <Link href="/sign-up">Sign Up</Link></p>
             </div>
