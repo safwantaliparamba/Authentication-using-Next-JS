@@ -3,10 +3,15 @@
 import { APIResponse, Error } from '@/types/api'
 import axios from 'axios'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 
 
 const SignUp = () => {
+    const router = useRouter()
+
+    const [isLoading, setLoading] = useState(false)
     const [inputs, setInputs] = useState({
         name:"",
         email:"",
@@ -24,20 +29,31 @@ const SignUp = () => {
     }
 
     const onSignup = ()=>{
-        console.log("signing up....");
-        
-        axios
-            .post('/api/v1/sign-up/',{...inputs})
-            .then((res)=>{
-                const {StatusCode,data}: APIResponse<null> = res.data
+        try {
+            setLoading(true);
+            axios
+                .post('/api/v1/sign-up/',{...inputs})
+                .then((res)=>{
+                    const {StatusCode,data}: APIResponse<null> = res.data
 
-                console.log(res.data);
-            })
-            .catch((err: Error)=>{
-                console.log(err.message);
-                
-            })
-            
+                    if (StatusCode === 6000){
+                        router.push("/sign-in")
+                    }else{
+                        console.log(data?.message);
+                        
+                        toast(data?.message,{
+                            type:"error"
+                        })
+                    }
+                })
+                .catch((err: Error)=>{
+                    console.log(err.message);
+                })   
+        } catch (error: any) {
+            console.log(error.message);
+        }finally{
+            setLoading(false)
+        }  
     }
 
     return (
@@ -76,9 +92,9 @@ const SignUp = () => {
                 </div>
                 <button 
                     className="px-3 py-1 bg-[#7f50ff] text-[#000] w-full rounded font-bold"
-                    onClick={onSignup}
+                    onClick={!isLoading ? onSignup : ()=>{}}
                 >
-                    Submit
+                    {isLoading ? "loading" : "Submit"}
                 </button>
                 <p className="text-center mt-6 text-[14px]">Already have an account? <Link href="/sign-in">Sign In</Link></p>
             </div>
